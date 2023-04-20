@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/gocolly/colly"
 	"log"
+	"os"
 	. "project/main/event"
+
+	"github.com/gocolly/colly"
 )
 
 func main() {
@@ -16,6 +19,8 @@ func main() {
 	for _, event := range events {
 		fmt.Println(event.Type)
 	}
+
+	saveInArchive(events)
 
 }
 
@@ -42,4 +47,23 @@ func bytesFromAPI() []byte {
 		log.Fatal(err)
 	}
 	return data
+}
+
+func saveInArchive(events []Event) {
+	// Creates file if necessary, appends if file exists
+	file, err := os.OpenFile("archive/archive.json", os.O_CREATE|os.O_RDWR, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	writer := bufio.NewWriter(file)
+	data, err := json.Marshal(events)
+	if err != nil {
+		return
+	}
+	_, err = writer.Write(data)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }
