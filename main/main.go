@@ -4,30 +4,68 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/gocolly/colly"
 	"log"
 	"os"
 	. "project/main/event"
-
-	"github.com/gocolly/colly"
 )
 
 func main() {
-	data := bytesFromAPI()
 
-	events := eventCreator(data)
+	// Archive data
+	eventsInArchive := getArchive()
 
-	for _, event := range events {
-		fmt.Println(event.Type)
+	// New data
+	newEvents := getNewEvents()
+
+	// Merge old event with new events. Also, save the amount of duplicates in variable (could be useful)
+	mergedEvents, duplicates := mergeEvents(eventsInArchive, newEvents)
+
+	// Save new slice of events in archive
+	saveInArchive(mergedEvents)
+
+	fmt.Println("Events where successfully fetched, created and saved. \n Amount of duplicates were:", duplicates)
+
+}
+
+// Merges new and old events into a single slice
+func mergeEvents(eventsInArchive []Event, newEvents []Event) ([]Event, int) {
+	// Old and new with duplicates
+	allEventsRaw := append(eventsInArchive, newEvents...)
+	var mergedEvents []Event
+	visited := make(map[int]int)
+	var duplicates int
+	// Time complexity is O(n^2) because "append" creates a new slice which is O(n) for every new event
+	for _, event := range allEventsRaw {
+		_, ok := visited[event.Id]
+		if !ok {
+			visited[event.Id]++
+			mergedEvents = append(mergedEvents, event)
+		} else {
+			duplicates++
+		}
 	}
+	return mergedEvents, duplicates
+}
 
-	saveInArchive(events)
+func getNewEvents() []Event {
+	newData := bytesFromAPI()
+	newEvents := eventCreator(newData)
+	return newEvents
+}
 
+// Returns the events that are currently stored in the archive
+func getArchive() []Event {
+	data, _ := os.ReadFile("main/archive/archive.json")
+	eventsInArchive := eventCreator(data)
+	return eventsInArchive
 }
 
 // From byte data to structs of type event
 func eventCreator(data []byte) []Event {
 	var events []Event
 	if err := json.Unmarshal(data, &events); err != nil {
+		fmt.Println("Error occurred while creating events")
 		log.Fatal(err)
 	}
 	return events
@@ -51,8 +89,9 @@ func bytesFromAPI() []byte {
 
 func saveInArchive(events []Event) {
 	// Creates file if necessary, appends if file exists
-	file, err := os.OpenFile("archive/archive.json", os.O_CREATE|os.O_RDWR, 0644)
+	file, err := os.OpenFile("main/archive/archive.json", os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
+		fmt.Println("An error occurred while trying to open the archive")
 		log.Fatal(err)
 	}
 	defer file.Close()
@@ -62,8 +101,8 @@ func saveInArchive(events []Event) {
 		return
 	}
 	_, err = writer.Write(data)
-
 	if err != nil {
+		fmt.Println("An error occurred while trying to store data in the archive")
 		log.Fatal(err)
 	}
 }

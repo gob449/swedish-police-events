@@ -1,6 +1,8 @@
 package event
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type Event struct {
 	Id       int    `json:"id"`
@@ -40,5 +42,6 @@ func (e ById) Less(i, j int) bool {
 }
 
 func (e ById) Swap(i int, j int) {
+
 	e[i].Id, e[j].Id = e[j].Id, e[i].Id
 }
