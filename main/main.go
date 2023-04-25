@@ -5,27 +5,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gocolly/colly"
+	"github.com/pkg/browser"
 	"log"
 	"os"
 	. "project/main/event"
 )
 
 func main() {
-
 	// Archive data
 	eventsInArchive := getArchive()
-
 	// New data
 	newEvents := getNewEvents()
-
 	// Merge old event with new events. Also, save the amount of duplicates in variable (could be useful)
-	mergedEvents, duplicates := mergeEvents(eventsInArchive, newEvents)
+	mergedEvents, _ := mergeEvents(eventsInArchive, newEvents)
 
-	// Save new slice of events in archive
+	openSummary(mergedEvents[0].Url)
+
 	saveInArchive(mergedEvents)
-
-	fmt.Println("Events where successfully fetched, created and saved. \n Amount of duplicates were:", duplicates)
-
 }
 
 // Merges new and old events into a single slice
@@ -94,7 +90,12 @@ func saveInArchive(events []Event) {
 		fmt.Println("An error occurred while trying to open the archive")
 		log.Fatal(err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Println("An error occurred while trying to close the archive")
+			log.Fatal(err)
+		}
+	}()
 	writer := bufio.NewWriter(file)
 	data, err := json.Marshal(events)
 	if err != nil {
@@ -104,5 +105,13 @@ func saveInArchive(events []Event) {
 	if err != nil {
 		fmt.Println("An error occurred while trying to store data in the archive")
 		log.Fatal(err)
+	}
+}
+
+// Takes Event.Id value and opens a webpage with the corresponding extensive event summary
+func openSummary(URL string) {
+	URL = "https://polisen.se/" + URL
+	if err := browser.OpenURL(URL); err != nil {
+		fmt.Println("An error occurred while trying to open the event summary page.")
 	}
 }
