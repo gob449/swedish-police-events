@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	. "project/main/event"
+	"sort"
 	"strings"
 	"time"
 
@@ -118,13 +119,13 @@ func terminalTemplate() {
 	lowerCategory := strings.ToLower(category)
 	switch lowerCategory {
 	case "type":
-		fmt.Printf("Write a specific type of event to get all crimes of that type, or write 'all' to get all crimes sorted by the types in alpabethical order")
+		printSpecificTypeInTerminal()
 	case "location":
-		fmt.Printf("Write a specific location to get all crimes that happened in that location, or write 'all' to get all crimes sorted by the location in alpabethical order")
+		printSpecificLocationInTerminal()
 	case "datetime":
-		//Print the crimes sorted by time
+		printDatetimesInTerminal()
 	case "id":
-		//Print the crimes sorted by id
+		printIdsInTermianl()
 	case "exit":
 		print("Ok, exiting the program...\n")
 		time.Sleep(3 * time.Second)
@@ -133,5 +134,66 @@ func terminalTemplate() {
 		print("Wrong input, try again\n")
 		terminalTemplate()
 	}
+}
 
+func printSpecificTypeInTerminal() {
+	fmt.Printf("Write a specific type of event to get all crimes of that type, or write 'all' to get all crimes sorted by the types in alpabethical order\n")
+
+	var typeSearch string
+	fmt.Scanln(&typeSearch)
+	lowerType := strings.ToLower(typeSearch)
+
+	eventsInArchive := getArchive()
+	sort.Slice(eventsInArchive, func(i, j int) bool {
+		return eventsInArchive[i].Type < eventsInArchive[j].Type
+	})
+	for _, event := range eventsInArchive {
+		currentType := strings.ToLower(event.Type)
+		if lowerType != "all" && lowerType == currentType {
+			fmt.Println(event.Name)
+		} else if lowerType == "all" {
+			fmt.Println(event.Name)
+		}
+	}
+}
+
+func printSpecificLocationInTerminal() {
+	fmt.Printf("Write a specific location to get all crimes that happened in that location, or write 'all' to get all crimes sorted by the location in alpabethical order\n")
+
+	var locationSearch string
+	fmt.Scanln(&locationSearch)
+	lowerLocation := strings.ToLower(locationSearch)
+
+	eventsInArchive := getArchive()
+	sort.Slice(eventsInArchive, func(i, j int) bool {
+		return eventsInArchive[i].Location.Name < eventsInArchive[j].Location.Name
+	})
+	for _, event := range eventsInArchive {
+		currentlocation := strings.ToLower(event.Location.Name)
+		if lowerLocation != "all" && lowerLocation == currentlocation {
+			fmt.Println(event.Name)
+		} else if lowerLocation == "all" {
+			fmt.Println(event.Name)
+		}
+	}
+}
+
+func printDatetimesInTerminal() {
+	eventsInArchive := getArchive()
+	sort.Slice(eventsInArchive, func(i, j int) bool {
+		return eventsInArchive[i].Datetime < eventsInArchive[j].Datetime
+	})
+	for _, event := range eventsInArchive {
+		fmt.Println(event.Name)
+	}
+}
+
+func printIdsInTermianl() {
+	eventsInArchive := getArchive()
+	sort.Slice(eventsInArchive, func(i, j int) bool {
+		return eventsInArchive[i].Id < eventsInArchive[j].Id
+	})
+	for _, event := range eventsInArchive {
+		fmt.Println(event.Name)
+	}
 }
