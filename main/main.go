@@ -4,28 +4,29 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/gocolly/colly"
 	"log"
 	"os"
 	. "project/main/event"
+	"strings"
+	"time"
+
+	"github.com/gocolly/colly"
 )
 
 func main() {
 
 	// Archive data
 	eventsInArchive := getArchive()
-
 	// New data
 	newEvents := getNewEvents()
-
 	// Merge old event with new events. Also, save the amount of duplicates in variable (could be useful)
 	mergedEvents, duplicates := mergeEvents(eventsInArchive, newEvents)
 
 	// Save new slice of events in archive
 	saveInArchive(mergedEvents)
+	fmt.Println("Events where successfully fetched, created and saved. \nAmount of duplicates were:", duplicates)
 
-	fmt.Println("Events where successfully fetched, created and saved. \n Amount of duplicates were:", duplicates)
-
+	terminalTemplate()
 }
 
 // Merges new and old events into a single slice
@@ -56,7 +57,8 @@ func getNewEvents() []Event {
 
 // Returns the events that are currently stored in the archive
 func getArchive() []Event {
-	data, _ := os.ReadFile("main/archive/archive.json")
+	//ADD /main BEFORE PUSH
+	data, _ := os.ReadFile("archive/archive.json")
 	eventsInArchive := eventCreator(data)
 	return eventsInArchive
 }
@@ -89,7 +91,8 @@ func bytesFromAPI() []byte {
 
 func saveInArchive(events []Event) {
 	// Creates file if necessary, appends if file exists
-	file, err := os.OpenFile("main/archive/archive.json", os.O_CREATE|os.O_RDWR, 0644)
+	//ADD /main BEFORE PUSH
+	file, err := os.OpenFile("archive/archive.json", os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		fmt.Println("An error occurred while trying to open the archive")
 		log.Fatal(err)
@@ -105,4 +108,30 @@ func saveInArchive(events []Event) {
 		fmt.Println("An error occurred while trying to store data in the archive")
 		log.Fatal(err)
 	}
+}
+
+func terminalTemplate() {
+	fmt.Println("-------------------------------------------------------------------------------------------------------")
+	fmt.Printf("This program gather information about different crimes in Sweden, posted on the Swedish police website.\nYou can sort the different crimes by different catagories.\nWrite one of the following words to sort the crimes by it:\n1. Type\n2. Location\n3. Datetime\n4. ID\nWrite 'exit' if you want to exit the program\n")
+	var category string
+	fmt.Scanln(&category)
+	lowerCategory := strings.ToLower(category)
+	switch lowerCategory {
+	case "type":
+		fmt.Printf("Write a specific type of event to get all crimes of that type, or write 'all' to get all crimes sorted by the types in alpabethical order")
+	case "location":
+		fmt.Printf("Write a specific location to get all crimes that happened in that location, or write 'all' to get all crimes sorted by the location in alpabethical order")
+	case "datetime":
+		//Print the crimes sorted by time
+	case "id":
+		//Print the crimes sorted by id
+	case "exit":
+		print("Ok, exiting the program...\n")
+		time.Sleep(3 * time.Second)
+		os.Exit(1)
+	default:
+		print("Wrong input, try again\n")
+		terminalTemplate()
+	}
+
 }
