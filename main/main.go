@@ -113,7 +113,7 @@ func saveInArchive(events []Event) {
 
 func terminalTemplate() {
 	fmt.Println("-------------------------------------------------------------------------------------------------------")
-	fmt.Printf("This program gather information about different crimes in Sweden, posted on the Swedish police website.\nYou can sort the different crimes by different catagories.\nWrite one of the following words to sort the crimes by it:\n1. Type\n2. Location\n3. Datetime\n4. ID\nWrite 'exit' if you want to exit the program\n")
+	fmt.Printf("This program gather information about crimes in Sweden, posted on the Swedish police website.\nYou can sort the crimes by different catagories.\nWrite one of the following words to sort the crimes by it:\n1. Type\n2. Location\n3. Datetime\n4. ID\nWrite 'exit' if you want to exit the program\n")
 	var category string
 	fmt.Scanln(&category)
 	lowerCategory := strings.ToLower(category)
