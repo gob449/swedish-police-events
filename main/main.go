@@ -9,6 +9,11 @@ import (
 	"log"
 	"os"
 	. "project/main/event"
+	"sort"
+	"strings"
+	"time"
+
+	"github.com/gocolly/colly"
 )
 
 func main() {
@@ -17,11 +22,16 @@ func main() {
 	// New data
 	newEvents := getNewEvents()
 	// Merge old event with new events. Also, save the amount of duplicates in variable (could be useful)
-	mergedEvents, _ := mergeEvents(eventsInArchive, newEvents)
 
-	openSummary(mergedEvents[0].Url)
+	mergedEvents, duplicates := mergeEvents(eventsInArchive, newEvents)
 
+	// Save new slice of events in archive
 	saveInArchive(mergedEvents)
+	fmt.Println("Events where successfully fetched, created and saved. \nAmount of duplicates were:", duplicates)
+
+	terminalTemplate()
+
+
 }
 
 // Merges new and old events into a single slice
@@ -108,6 +118,93 @@ func saveInArchive(events []Event) {
 	}
 }
 
+
+func terminalTemplate() {
+	fmt.Println("-------------------------------------------------------------------------------------------------------")
+	fmt.Printf("This program gather information about crimes in Sweden, posted on the Swedish police website.\nYou can sort the crimes by different catagories.\nWrite one of the following words to sort the crimes by it:\n1. Type\n2. Location\n3. Datetime\n4. ID\nWrite 'exit' if you want to exit the program\n")
+	var category string
+	fmt.Scanln(&category)
+	lowerCategory := strings.ToLower(category)
+	switch lowerCategory {
+	case "type":
+		printSpecificTypeInTerminal()
+	case "location":
+		printSpecificLocationInTerminal()
+	case "datetime":
+		printDatetimesInTerminal()
+	case "id":
+		printIdsInTermianl()
+	case "exit":
+		print("Ok, exiting the program...\n")
+		time.Sleep(3 * time.Second)
+		os.Exit(1)
+	default:
+		print("Wrong input, try again\n")
+		terminalTemplate()
+	}
+}
+
+func printSpecificTypeInTerminal() {
+	fmt.Printf("Write a specific type of event to get all crimes of that type, or write 'all' to get all crimes sorted by the types in alpabethical order\n")
+
+	var typeSearch string
+	fmt.Scanln(&typeSearch)
+	lowerType := strings.ToLower(typeSearch)
+
+	eventsInArchive := getArchive()
+	sort.Slice(eventsInArchive, func(i, j int) bool {
+		return eventsInArchive[i].Type < eventsInArchive[j].Type
+	})
+	for _, event := range eventsInArchive {
+		currentType := strings.ToLower(event.Type)
+		if lowerType != "all" && lowerType == currentType {
+			fmt.Println(event.Name)
+		} else if lowerType == "all" {
+			fmt.Println(event.Name)
+		}
+	}
+}
+
+func printSpecificLocationInTerminal() {
+	fmt.Printf("Write a specific location to get all crimes that happened in that location, or write 'all' to get all crimes sorted by the location in alpabethical order\n")
+
+	var locationSearch string
+	fmt.Scanln(&locationSearch)
+	lowerLocation := strings.ToLower(locationSearch)
+
+	eventsInArchive := getArchive()
+	sort.Slice(eventsInArchive, func(i, j int) bool {
+		return eventsInArchive[i].Location.Name < eventsInArchive[j].Location.Name
+	})
+	for _, event := range eventsInArchive {
+		currentlocation := strings.ToLower(event.Location.Name)
+		if lowerLocation != "all" && lowerLocation == currentlocation {
+			fmt.Println(event.Name)
+		} else if lowerLocation == "all" {
+			fmt.Println(event.Name)
+		}
+	}
+}
+
+func printDatetimesInTerminal() {
+	eventsInArchive := getArchive()
+	sort.Slice(eventsInArchive, func(i, j int) bool {
+		return eventsInArchive[i].Datetime < eventsInArchive[j].Datetime
+	})
+	for _, event := range eventsInArchive {
+		fmt.Println(event.Name)
+	}
+}
+
+func printIdsInTermianl() {
+	eventsInArchive := getArchive()
+	sort.Slice(eventsInArchive, func(i, j int) bool {
+		return eventsInArchive[i].Id < eventsInArchive[j].Id
+	})
+	for _, event := range eventsInArchive {
+		fmt.Println(event.Name)
+    }
+}
 // Takes Event.Id value and opens a webpage with the corresponding extensive event summary
 func openSummary(URL string) {
 	URL = "https://polisen.se/" + URL
