@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	. "project/main/event"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -127,14 +128,18 @@ func parseAlternativeAndAct() {
 	}
 	lowerCategory := strings.ToLower(category)
 	switch lowerCategory {
-	case "type":
+	case "t":
 		printSpecificTypeInTerminal()
-	case "location":
+	case "l":
 		printSpecificLocationInTerminal()
-	case "datetime":
+	case "d":
 		printDatetimeInTerminal()
-	case "id":
+	case "i":
 		printIdsInTerminal()
+	case "s":
+		printSpecificSummaryInTerminal()
+	case "v":
+		parseInputForID()
 	case "exit":
 		print("Ok, exiting the program...\n")
 		time.Sleep(3 * time.Second)
@@ -142,6 +147,46 @@ func parseAlternativeAndAct() {
 	default:
 		print("Wrong input, try again\n")
 		terminalTemplate()
+	}
+}
+
+func parseInputForID() {
+	fmt.Println("Please provide id of the event you want to access ")
+	var id string
+	if _, err := fmt.Scanln(&id); err != nil {
+		fmt.Println("An error occurred while parsing user input")
+		log.Fatal(err)
+	}
+	key, err := strconv.Atoi(id)
+	if err != nil {
+		fmt.Println("An error occurred while parsing user input")
+		log.Fatal(err)
+	}
+	eventsInArchive := getArchive()
+	for _, event := range eventsInArchive {
+		if key == event.Id {
+			openSummary(event.Url)
+		}
+	}
+}
+
+func printSpecificSummaryInTerminal() {
+	fmt.Println("Please provide id of the event you want to access ")
+	var id string
+	if _, err := fmt.Scanln(&id); err != nil {
+		fmt.Println("An error occurred while parsing user input")
+		log.Fatal(err)
+	}
+	key, err := strconv.Atoi(id)
+	if err != nil {
+		fmt.Println("An error occurred while parsing user input")
+		log.Fatal(err)
+	}
+	eventsInArchive := getArchive()
+	for _, event := range eventsInArchive {
+		if key == event.Id {
+			fmt.Println(event.Name, "----", event.Summary)
+		}
 	}
 }
 
@@ -155,11 +200,13 @@ You can sort the crimes by different catagories.
 
 func provideAlternatives() {
 	fmt.Printf(`
-Write one of the following words to sort the crimes by it:
-1. Type
-2. Location
-3. Datetime
-4. ID
+Write one of the following characters to sort the crimes by it:
+1. t (Type) 
+2. l (Location)
+3. d (Datetime)
+4. i (ID)
+5. s (Summary)
+6. v (Visit page for extensive summary)
 Write 'exit' if you want to exit the program
 `)
 }
