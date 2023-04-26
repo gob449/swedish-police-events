@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/gocolly/colly"
+	"github.com/pkg/browser"
 	"log"
 	"os"
 	. "project/main/event"
@@ -15,12 +17,12 @@ import (
 )
 
 func main() {
-
 	// Archive data
 	eventsInArchive := getArchive()
 	// New data
 	newEvents := getNewEvents()
 	// Merge old event with new events. Also, save the amount of duplicates in variable (could be useful)
+
 	mergedEvents, duplicates := mergeEvents(eventsInArchive, newEvents)
 
 	// Save new slice of events in archive
@@ -28,6 +30,8 @@ func main() {
 	fmt.Println("Events where successfully fetched, created and saved. \nAmount of duplicates were:", duplicates)
 
 	terminalTemplate()
+
+
 }
 
 // Merges new and old events into a single slice
@@ -58,8 +62,7 @@ func getNewEvents() []Event {
 
 // Returns the events that are currently stored in the archive
 func getArchive() []Event {
-	//ADD /main BEFORE PUSH
-	data, _ := os.ReadFile("archive/archive.json")
+	data, _ := os.ReadFile("main/archive/archive.json")
 	eventsInArchive := eventCreator(data)
 	return eventsInArchive
 }
@@ -92,13 +95,17 @@ func bytesFromAPI() []byte {
 
 func saveInArchive(events []Event) {
 	// Creates file if necessary, appends if file exists
-	//ADD /main BEFORE PUSH
-	file, err := os.OpenFile("archive/archive.json", os.O_CREATE|os.O_RDWR, 0644)
+	file, err := os.OpenFile("main/archive/archive.json", os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		fmt.Println("An error occurred while trying to open the archive")
 		log.Fatal(err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Println("An error occurred while trying to close the archive")
+			log.Fatal(err)
+		}
+	}()
 	writer := bufio.NewWriter(file)
 	data, err := json.Marshal(events)
 	if err != nil {
@@ -110,6 +117,7 @@ func saveInArchive(events []Event) {
 		log.Fatal(err)
 	}
 }
+
 
 func terminalTemplate() {
 	fmt.Println("-------------------------------------------------------------------------------------------------------")
@@ -195,5 +203,12 @@ func printIdsInTermianl() {
 	})
 	for _, event := range eventsInArchive {
 		fmt.Println(event.Name)
+    }
+}
+// Takes Event.Id value and opens a webpage with the corresponding extensive event summary
+func openSummary(URL string) {
+	URL = "https://polisen.se/" + URL
+	if err := browser.OpenURL(URL); err != nil {
+		fmt.Println("An error occurred while trying to open the event summary page.")
 	}
 }
