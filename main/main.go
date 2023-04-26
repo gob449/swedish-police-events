@@ -9,11 +9,8 @@ import (
 	"log"
 	"os"
 	. "project/main/event"
-	"sort"
 	"strings"
 	"time"
-
-	"github.com/gocolly/colly"
 )
 
 func main() {
@@ -22,15 +19,12 @@ func main() {
 	// New data
 	newEvents := getNewEvents()
 	// Merge old event with new events. Also, save the amount of duplicates in variable (could be useful)
-
-	mergedEvents, duplicates := mergeEvents(eventsInArchive, newEvents)
-
+	mergedEvents, _ := mergeEvents(eventsInArchive, newEvents)
 	// Save new slice of events in archive
 	saveInArchive(mergedEvents)
-	fmt.Println("Events where successfully fetched, created and saved. \nAmount of duplicates were:", duplicates)
 
+	// start program
 	terminalTemplate()
-
 
 }
 
@@ -109,21 +103,28 @@ func saveInArchive(events []Event) {
 	writer := bufio.NewWriter(file)
 	data, err := json.Marshal(events)
 	if err != nil {
-		return
+		fmt.Println("An error occurred while trying to store data in the archive")
 	}
-	_, err = writer.Write(data)
-	if err != nil {
+	if _, err := writer.Write(data); err != nil {
 		fmt.Println("An error occurred while trying to store data in the archive")
 		log.Fatal(err)
 	}
 }
 
-
 func terminalTemplate() {
-	fmt.Println("-------------------------------------------------------------------------------------------------------")
-	fmt.Printf("This program gather information about crimes in Sweden, posted on the Swedish police website.\nYou can sort the crimes by different catagories.\nWrite one of the following words to sort the crimes by it:\n1. Type\n2. Location\n3. Datetime\n4. ID\nWrite 'exit' if you want to exit the program\n")
+	initialInfo()
+	for {
+		provideAlternatives()
+		parseAlternativeAndAct()
+	}
+}
+
+func parseAlternativeAndAct() {
 	var category string
-	fmt.Scanln(&category)
+	if _, err := fmt.Scanln(&category); err != nil {
+		fmt.Println("An error occurred while parsing user input")
+		log.Fatal(err)
+	}
 	lowerCategory := strings.ToLower(category)
 	switch lowerCategory {
 	case "type":
@@ -131,9 +132,9 @@ func terminalTemplate() {
 	case "location":
 		printSpecificLocationInTerminal()
 	case "datetime":
-		printDatetimesInTerminal()
+		printDatetimeInTerminal()
 	case "id":
-		printIdsInTermianl()
+		printIdsInTerminal()
 	case "exit":
 		print("Ok, exiting the program...\n")
 		time.Sleep(3 * time.Second)
@@ -144,23 +145,45 @@ func terminalTemplate() {
 	}
 }
 
+func initialInfo() {
+	fmt.Printf(`
+--------------------------------------------------------------------------------------------
+This program gather information about crimes in Sweden, posted on the Swedish police website.
+You can sort the crimes by different catagories.	
+`)
+}
+
+func provideAlternatives() {
+	fmt.Printf(`
+Write one of the following words to sort the crimes by it:
+1. Type
+2. Location
+3. Datetime
+4. ID
+Write 'exit' if you want to exit the program
+`)
+}
+
 func printSpecificTypeInTerminal() {
 	fmt.Printf("Write a specific type of event to get all crimes of that type, or write 'all' to get all crimes sorted by the types in alpabethical order\n")
 
 	var typeSearch string
-	fmt.Scanln(&typeSearch)
+	if _, err := fmt.Scanln(&typeSearch); err != nil {
+		fmt.Println("An error occurred while parsing user input")
+		log.Fatal(err)
+	}
 	lowerType := strings.ToLower(typeSearch)
-
 	eventsInArchive := getArchive()
-	sort.Slice(eventsInArchive, func(i, j int) bool {
-		return eventsInArchive[i].Type < eventsInArchive[j].Type
-	})
-	for _, event := range eventsInArchive {
-		currentType := strings.ToLower(event.Type)
-		if lowerType != "all" && lowerType == currentType {
-			fmt.Println(event.Name)
-		} else if lowerType == "all" {
-			fmt.Println(event.Name)
+
+	if lowerType == "all" {
+		for _, event := range eventsInArchive {
+			fmt.Println(event.Id, "----", event.Name)
+		}
+	} else {
+		for _, event := range eventsInArchive {
+			if lowerType == strings.ToLower(event.Type) {
+				fmt.Println(event.Id, "----", event.Name)
+			}
 		}
 	}
 }
@@ -169,43 +192,42 @@ func printSpecificLocationInTerminal() {
 	fmt.Printf("Write a specific location to get all crimes that happened in that location, or write 'all' to get all crimes sorted by the location in alpabethical order\n")
 
 	var locationSearch string
-	fmt.Scanln(&locationSearch)
+	if _, err := fmt.Scanln(&locationSearch); err != nil {
+		fmt.Println("An error occurred while parsing user input")
+		log.Fatal(err)
+	}
 	lowerLocation := strings.ToLower(locationSearch)
 
 	eventsInArchive := getArchive()
-	sort.Slice(eventsInArchive, func(i, j int) bool {
-		return eventsInArchive[i].Location.Name < eventsInArchive[j].Location.Name
-	})
-	for _, event := range eventsInArchive {
-		currentlocation := strings.ToLower(event.Location.Name)
-		if lowerLocation != "all" && lowerLocation == currentlocation {
-			fmt.Println(event.Name)
-		} else if lowerLocation == "all" {
-			fmt.Println(event.Name)
+
+	if lowerLocation == "all" {
+		for _, event := range eventsInArchive {
+			fmt.Println(event.Id, "----", event.Name)
+		}
+	} else {
+		for _, event := range eventsInArchive {
+			if lowerLocation == strings.ToLower(event.Location.Name) {
+				fmt.Println(event.Id, "----", event.Name)
+			}
 		}
 	}
 }
 
-func printDatetimesInTerminal() {
+func printDatetimeInTerminal() {
 	eventsInArchive := getArchive()
-	sort.Slice(eventsInArchive, func(i, j int) bool {
-		return eventsInArchive[i].Datetime < eventsInArchive[j].Datetime
-	})
 	for _, event := range eventsInArchive {
-		fmt.Println(event.Name)
+		fmt.Println(event.Id, "----", event.Name)
 	}
 }
 
-func printIdsInTermianl() {
+func printIdsInTerminal() {
 	eventsInArchive := getArchive()
-	sort.Slice(eventsInArchive, func(i, j int) bool {
-		return eventsInArchive[i].Id < eventsInArchive[j].Id
-	})
 	for _, event := range eventsInArchive {
-		fmt.Println(event.Name)
-    }
+		fmt.Println(event.Id, "----", event.Name)
+	}
 }
-// Takes Event.Id value and opens a webpage with the corresponding extensive event summary
+
+// Takes Event.URL value and opens a webpage with the corresponding extensive event summary
 func openSummary(URL string) {
 	URL = "https://polisen.se/" + URL
 	if err := browser.OpenURL(URL); err != nil {
