@@ -2,7 +2,10 @@ package event
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
 	"strings"
+	"time"
 )
 
 type Event struct {
@@ -38,13 +41,11 @@ func (e ById) Len() int {
 }
 
 func (e ById) Less(i, j int) bool {
-
 	return e[i].Id < e[j].Id
 }
 
 func (e ById) Swap(i int, j int) {
-
-	e[i].Id, e[j].Id = e[j].Id, e[i].Id
+	e[i], e[j] = e[j], e[i]
 }
 
 // ByDatetime Implements sort methods:
@@ -56,11 +57,21 @@ func (e ByDatetime) Len() int {
 }
 
 func (e ByDatetime) Less(i, j int) bool {
-	return e[i].Datetime < e[j].Datetime
+	t1, err := time.Parse("2006-01-02 15:04:05 -07:00", e[i].Datetime)
+	if err != nil {
+		fmt.Println("Failed to parse", e[i].Datetime)
+		log.Fatal(err)
+	}
+	t2, err := time.Parse("2006-01-02 15:04:05 -07:00", e[j].Datetime)
+	if err != nil {
+		fmt.Println("Failed to parse", e[j].Datetime)
+		log.Fatal(err)
+	}
+	return t1.Before(t2)
 }
 
 func (e ByDatetime) Swap(i int, j int) {
-	e[i].Datetime, e[j].Datetime = e[j].Datetime, e[i].Datetime
+	e[i], e[j] = e[j], e[i]
 }
 
 // ByType Implements sort methods:
