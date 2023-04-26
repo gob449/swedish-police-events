@@ -4,14 +4,16 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/gocolly/colly"
-	"github.com/pkg/browser"
 	"log"
 	"os"
 	. "project/main/event"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gocolly/colly"
+	"github.com/pkg/browser"
 )
 
 func main() {
@@ -211,6 +213,8 @@ Write 'exit' if you want to exit the program
 `)
 }
 
+// Prints the names and Id:s of the crimes, based on its Type.
+// Allows the user to search for a specific type to get all the crimes of that type printed
 func printSpecificTypeInTerminal() {
 	fmt.Printf("Write a specific type of event to get all crimes of that type, or write 'all' to get all crimes sorted by the types in alpabethical order\n")
 
@@ -221,6 +225,8 @@ func printSpecificTypeInTerminal() {
 	}
 	lowerType := strings.ToLower(typeSearch)
 	eventsInArchive := getArchive()
+
+	sort.Sort(ByType(eventsInArchive))
 
 	if lowerType == "all" {
 		for _, event := range eventsInArchive {
@@ -235,6 +241,8 @@ func printSpecificTypeInTerminal() {
 	}
 }
 
+// Prints the names and Id:s of the crimes, based on its Location.
+// Allows the user to search for a specific location to get all the crimes from that location printed
 func printSpecificLocationInTerminal() {
 	fmt.Printf("Write a specific location to get all crimes that happened in that location, or write 'all' to get all crimes sorted by the location in alpabethical order\n")
 
@@ -246,6 +254,8 @@ func printSpecificLocationInTerminal() {
 	lowerLocation := strings.ToLower(locationSearch)
 
 	eventsInArchive := getArchive()
+
+	sort.Sort(ByLocation(eventsInArchive))
 
 	if lowerLocation == "all" {
 		for _, event := range eventsInArchive {
@@ -260,15 +270,19 @@ func printSpecificLocationInTerminal() {
 	}
 }
 
+// Prints the names and Id:s of the crimes, based on its Datetime
 func printDatetimeInTerminal() {
 	eventsInArchive := getArchive()
+	sort.Sort(ByDatetime(eventsInArchive))
 	for _, event := range eventsInArchive {
 		fmt.Println(event.Id, "----", event.Name)
 	}
 }
 
+// Prints the names and Id:s of the crimes, based on its Id
 func printIdsInTerminal() {
 	eventsInArchive := getArchive()
+	sort.Sort(ById(eventsInArchive))
 	for _, event := range eventsInArchive {
 		fmt.Println(event.Id, "----", event.Name)
 	}

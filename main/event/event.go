@@ -87,7 +87,7 @@ func (e ByType) Less(i, j int) bool {
 }
 
 func (e ByType) Swap(i int, j int) {
-	e[i].Type, e[j].Type = e[j].Type, e[i].Type
+	e[i], e[j] = e[j], e[i]
 }
 
 // ByLocation Implements sort methods:
