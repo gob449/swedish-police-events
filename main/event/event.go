@@ -1,3 +1,7 @@
+// Gabriel Nyström 2023-04-26
+// Hugo Larsson Wilhelmsson 2023-04-26
+// This class defines the data structure 'event' and provides
+// sorting implmentations for 'event' based on different criteria
 package event
 
 import (
@@ -33,7 +37,6 @@ func (e *Event) MarshalJSON() ([]byte, error) {
 
 // ById Implements sort methods:
 // Len() int Less(i int, j int) bool Swap(i int, j int)
-// /*
 type ById []Event
 
 func (e ById) Len() int {
@@ -87,7 +90,7 @@ func (e ByType) Less(i, j int) bool {
 }
 
 func (e ByType) Swap(i int, j int) {
-	e[i].Type, e[j].Type = e[j].Type, e[i].Type
+	e[i], e[j] = e[j], e[i]
 }
 
 // ByLocation Implements sort methods:
