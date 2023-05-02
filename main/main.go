@@ -1,4 +1,4 @@
-// Gabriel Nyström 2023-04-26
+// Gabriel Räätäri Nyström 2023-04-26
 // Hugo Larsson Wilhelmsson 2023-04-26
 // This program gather information about crimes in Sweden, posten on the swedish police website.
 // The crimes can be sorted by location, type, id or datetime and the user can search for
@@ -20,6 +20,8 @@ import (
 	"strings"
 	"time"
 
+	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/widget"
 	"github.com/gocolly/colly"
 	"github.com/pkg/browser"
 )
@@ -27,16 +29,27 @@ import (
 // Collects the new data and merges it with the previous data in the database
 // Calls terminalTemplate() to start the program
 func main() {
-	// Archive data
-	eventsInArchive := getArchive()
-	// New data
-	newEvents := getNewEvents()
-	// Merge old event with new events. Also, save the amount of duplicates in variable (could be useful)
-	mergedEvents, _ := mergeEvents(eventsInArchive, newEvents)
-	// Save new slice of events in archive
-	saveInArchive(mergedEvents)
-	// start program
-	terminalTemplate()
+	/*
+		// Archive data
+		eventsInArchive := getArchive()
+		// New data
+		newEvents := getNewEvents()
+		// Merge old event with new events. Also, save the amount of duplicates in variable (could be useful)
+		mergedEvents, _ := mergeEvents(eventsInArchive, newEvents)
+		// Save new slice of events in archive
+		saveInArchive(mergedEvents)
+		// start program
+		terminalTemplate()
+	*/
+
+	myApp := app.New()
+	myWindow := myApp.NewWindow("Hello")
+	hello := widget.NewLabel("Hello Fyne!")
+	myWindow.SetContent(hello)
+	w2 := myApp.NewWindow("Larger")
+	w2.SetContent(widget.NewLabel("Consider it configured"))
+	w2.ShowAndRun()
+
 }
 
 // Merges new and old events into a single slice
