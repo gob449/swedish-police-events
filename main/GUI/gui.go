@@ -14,6 +14,7 @@ import (
 	"log"
 )
 
+//Initialize and runs the application
 func RunGUI() {
 	app := app.New()
 
@@ -22,6 +23,7 @@ func RunGUI() {
 	app.Run()
 }
 
+//Creates and displays the start window
 func openWindow(app fyne.App) {
 	// start window
 	start := app.NewWindow("Start")
@@ -32,6 +34,7 @@ func openWindow(app fyne.App) {
 	start.Show()
 }
 
+//defines the contents of the start window
 func contentsOfStartWindow(app fyne.App, start fyne.Window) {
 	//  ok-start button
 	okButton := widget.NewButton("ok", func() {
@@ -50,6 +53,7 @@ func contentsOfStartWindow(app fyne.App, start fyne.Window) {
 	start.SetContent(startContent)
 }
 
+//creates and displays the main window
 func mainWindow(app fyne.App) {
 	// main window
 	windowMain := app.NewWindow("SwePe")
@@ -64,6 +68,7 @@ func mainWindow(app fyne.App) {
 
 }
 
+//creates a vertical toolbar widget
 func verticalToolbar() *widget.Toolbar {
 	toolbar := widget.NewToolbar(
 		widget.NewToolbarAction(theme.SettingsIcon(), func() {
