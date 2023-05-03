@@ -1,4 +1,4 @@
-// Gabriel Nyström 2023-04-26
+// Gabriel Räätäri Nyström 2023-04-26
 // Hugo Larsson Wilhelmsson 2023-04-26
 // This class defines the data structure 'event' and provides
 // sorting implmentations for 'event' based on different criteria
