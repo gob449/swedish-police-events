@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	. "project/main/GUI"
 	. "project/main/event"
 	"sort"
 	"strconv"
@@ -26,7 +27,7 @@ func main() {
 	// Run terminal program
 	//terminalTemplate()
 
-	//RunGUI()
+	RunGUI()
 
 }
 
@@ -206,7 +207,7 @@ func parseInputForID() {
 	eventsInArchive := GetArchive()
 	for _, event := range eventsInArchive {
 		if key == event.Id {
-			OpenSummary(event.Url)
+			OpenInBrowser(event.Url)
 		}
 	}
 }
