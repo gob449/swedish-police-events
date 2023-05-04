@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/browser"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"time"
 )
@@ -113,6 +114,7 @@ func (e ByLocation) Swap(i, j int) {
 	e[i], e[j] = e[j], e[i]
 }
 
+// AllEventsSlice Merges archive- and new data and returns the merged slice
 func AllEventsSlice() []Event {
 	// Archive data
 	eventsInArchive := GetArchive()
@@ -121,7 +123,33 @@ func AllEventsSlice() []Event {
 	// Merge old event with new events. Also, save the amount of duplicates in variable (could be useful)
 	mergedEvents, _ := MergeEvents(eventsInArchive, newEvents)
 
+	sort.Sort(ByDatetime(mergedEvents))
+
 	return mergedEvents
+}
+
+func subCatType(events []Event) {
+	var subCategory []Event
+
+	var key string
+
+	for i, event := range events {
+		if event.Type == key {
+			subCategory[i] = event
+		}
+	}
+}
+
+func subCatLocation(events []Event) {
+	var subCategory []Event
+
+	var key string
+
+	for i, event := range events {
+		if event.Location.Name == key {
+			subCategory[i] = event
+		}
+	}
 }
 
 // Merges new and old events into a single slice
@@ -212,9 +240,35 @@ func SaveInArchive(events []Event) {
 }
 
 // Takes Event.URL value and opens a webpage with the corresponding extensive event summary
-func OpenSummary(URL string) {
-	URL = "https://polisen.se/" + URL
-	if err := browser.OpenURL(URL); err != nil {
+func OpenInBrowser(URL string) {
+	url := "https://polisen.se/" + URL
+	if err := browser.OpenURL(url); err != nil {
 		fmt.Println("An error occurred while trying to open the event summary page.")
 	}
+}
+
+func GetExtendedSummary(URL string) string {
+	url := "https://polisen.se/" + URL
+
+	var summary string
+
+	c := colly.NewCollector(colly.AllowURLRevisit())
+
+	c.OnError(func(response *colly.Response, err error) {
+		log.Fatal(err)
+	})
+
+	c.OnRequest(func(request *colly.Request) {
+		request.Headers.Set("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:89.0) Gecko/20100101")
+	})
+
+	c.OnHTML("#main-content > div.body-content-wrapper > div > div > div > div > div.event-content > div.text-body.editorial-html", func(e *colly.HTMLElement) {
+		summary = strings.TrimSpace(e.Text)
+	})
+
+	if err := c.Visit(url); err != nil {
+		log.Fatal(err)
+	}
+
+	return summary
 }

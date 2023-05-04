@@ -11,11 +11,13 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	"log"
+	. "project/main/event"
+	"strconv"
 )
 
 // Initialize and runs the application
 func RunGUI() {
+
 	app := app.New()
 
 	openWindow(app)
@@ -41,11 +43,7 @@ func contentsOfStartWindow(app fyne.App, start fyne.Window) {
 		mainWindow(app)
 		start.Close()
 	})
-
-	myTextStyle := fyne.TextStyle{Bold: true, Monospace: true}
 	welcomeMessage := widget.NewLabel("Welcome to Swedish Police Events, press ok to get started!")
-	welcomeMessage.TextStyle = myTextStyle
-
 	startContent := container.New(layout.NewVBoxLayout(),
 		welcomeMessage,
 		okButton)
@@ -55,21 +53,16 @@ func contentsOfStartWindow(app fyne.App, start fyne.Window) {
 
 // creates and displays the main window
 func mainWindow(app fyne.App) {
+
+	// initializing events
+	events := AllEventsSlice()
+
+	// creates and displays the main window
 	// main window
-	windowMain := app.NewWindow("SwePe")
+	windowMain := app.NewWindow("Swedish Police Cases")
 	windowMain.Resize(fyne.NewSize(500, 600))
 	windowMain.CenterOnScreen()
 
-	contentsOfMainWindow := container.New(layout.NewVBoxLayout(), verticalToolbar())
-
-	windowMain.SetContent(contentsOfMainWindow)
-
-	windowMain.Show()
-
-}
-
-// creates a vertical toolbar widget
-func verticalToolbar() *widget.Toolbar {
 	toolbar := widget.NewToolbar(
 		widget.NewToolbarAction(theme.SettingsIcon(), func() {
 			fmt.Println("Display settings")
@@ -78,11 +71,59 @@ func verticalToolbar() *widget.Toolbar {
 			fmt.Println("Display search")
 		}),
 		widget.NewToolbarAction(theme.DocumentSaveIcon(), func() {
-			fmt.Println("Display save")
+			fmt.Println("Saved events in the archive")
 		}),
 		widget.NewToolbarAction(theme.HelpIcon(), func() {
-			log.Println("Display help")
+			fmt.Println("Display help")
 		}),
 	)
-	return toolbar
+
+	toolContainer := container.NewVBox(toolbar)
+
+	eventWidget := widget.NewList(
+		func() int {
+			return len(events)
+		},
+		func() fyne.CanvasObject {
+			return widget.NewButton("label", nil)
+		},
+		func(i widget.ListItemID, eventButton fyne.CanvasObject) {
+			button := eventButton.(*widget.Button)
+			button.SetText(events[i].Name)
+			button.OnTapped = func() {
+
+				eventInfo := "ID: " + strconv.Itoa(events[i].Id) +
+					"\nLocation: " + events[i].Location.Name +
+					"\nType: " + events[i].Type +
+					"\nSummary: " + events[i].Summary
+
+				eventWindowContainer := container.NewVBox(widget.NewLabel(eventInfo))
+
+				getDescriptionButton := widget.NewButton("Get description (Beware!\nscraping action)", func() {
+					eventWindowContainer.Add(widget.NewLabel(GetExtendedSummary(events[i].Url)))
+				})
+
+				openInBrowserButton := widget.NewButton("Open in browser", func() {
+					OpenInBrowser(events[i].Url)
+				})
+
+				closeEventInfoButton := widget.NewButton("Close", func() {
+					eventWindowContainer.Hide()
+				})
+
+				eventWindowContainer.Add(getDescriptionButton)
+				eventWindowContainer.Add(closeEventInfoButton)
+				eventWindowContainer.Add(openInBrowserButton)
+
+				toolContainer.Add(eventWindowContainer)
+			}
+		},
+	)
+
+	contentsOfMainWindow := container.NewHSplit(toolContainer, eventWidget)
+
+	windowMain.SetContent(contentsOfMainWindow)
+
+	windowMain.Show()
+
 }
