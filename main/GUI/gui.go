@@ -4,17 +4,17 @@
 package gui
 
 import (
+	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	"fmt"
 	"log"
 )
 
-//Initialize and runs the application
+// Initialize and runs the application
 func RunGUI() {
 	app := app.New()
 
@@ -23,7 +23,7 @@ func RunGUI() {
 	app.Run()
 }
 
-//Creates and displays the start window
+// Creates and displays the start window
 func openWindow(app fyne.App) {
 	// start window
 	start := app.NewWindow("Start")
@@ -34,7 +34,7 @@ func openWindow(app fyne.App) {
 	start.Show()
 }
 
-//defines the contents of the start window
+// defines the contents of the start window
 func contentsOfStartWindow(app fyne.App, start fyne.Window) {
 	//  ok-start button
 	okButton := widget.NewButton("ok", func() {
@@ -53,7 +53,7 @@ func contentsOfStartWindow(app fyne.App, start fyne.Window) {
 	start.SetContent(startContent)
 }
 
-//creates and displays the main window
+// creates and displays the main window
 func mainWindow(app fyne.App) {
 	// main window
 	windowMain := app.NewWindow("SwePe")
@@ -68,7 +68,7 @@ func mainWindow(app fyne.App) {
 
 }
 
-//creates a vertical toolbar widget
+// creates a vertical toolbar widget
 func verticalToolbar() *widget.Toolbar {
 	toolbar := widget.NewToolbar(
 		widget.NewToolbarAction(theme.SettingsIcon(), func() {
