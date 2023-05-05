@@ -12,6 +12,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	. "project/main/event"
+	"sort"
 	"strconv"
 )
 
@@ -57,6 +58,8 @@ func mainWindow(app fyne.App) {
 	// initializing events
 	events := AllEventsSlice()
 
+	sort.Sort(ByDatetime(events))
+
 	// creates and displays the main window
 	// main window
 	windowMain := app.NewWindow("Swedish Police Cases")
@@ -68,7 +71,56 @@ func mainWindow(app fyne.App) {
 			fmt.Println("Display settings")
 		}),
 		widget.NewToolbarAction(theme.SearchIcon(), func() {
-			fmt.Println("Display search")
+			typeButton := fyne.NewMenuItem("Type", func() {
+				typeSortedEvents := events
+				sort.Sort(ByType(typeSortedEvents))
+				typeWindow := app.NewWindow("Type")
+				typeWindow.Resize(fyne.NewSize(500, 700))
+				eventTypeWidget := widget.NewList(
+					func() int {
+						return len(events)
+					},
+					func() fyne.CanvasObject {
+						return widget.NewButton("label", nil)
+					},
+					func(i widget.ListItemID, eventButton fyne.CanvasObject) {
+						button := eventButton.(*widget.Button)
+						button.SetText(typeSortedEvents[i].Type + "\n" + typeSortedEvents[i].Name)
+
+					},
+				)
+
+				typeWindow.SetContent(eventTypeWidget)
+				typeWindow.Show()
+			})
+
+			locationButton := fyne.NewMenuItem("Location", func() {
+				locationSortedEvents := events
+				sort.Sort(ByLocation(locationSortedEvents))
+				locationWindow := app.NewWindow("Location")
+				locationWindow.Resize(fyne.NewSize(500, 700))
+				eventLocationWidget := widget.NewList(
+					func() int {
+						return len(events)
+					},
+					func() fyne.CanvasObject {
+						return widget.NewButton("label", nil)
+					},
+					func(i widget.ListItemID, eventButton fyne.CanvasObject) {
+						button := eventButton.(*widget.Button)
+						button.SetText(locationSortedEvents[i].Type + "\n" + locationSortedEvents[i].Name)
+
+					},
+				)
+
+				locationWindow.SetContent(eventLocationWidget)
+				locationWindow.Show()
+			})
+
+			popupMenu := fyne.NewMenu("Search popupMenu", typeButton, locationButton)
+
+			menu := widget.NewPopUpMenu(popupMenu, windowMain.Canvas())
+			menu.Show()
 		}),
 		widget.NewToolbarAction(theme.DocumentSaveIcon(), func() {
 			fmt.Println("Saved events in the archive")
