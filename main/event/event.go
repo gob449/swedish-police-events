@@ -17,6 +17,98 @@ import (
 	"time"
 )
 
+var (
+	TypeKeys = []string{
+		"Alkohollagen",
+		"Anträffad död",
+		"Anträffat gods",
+		"Arbetsplatsolycka",
+		"Bedrägeri",
+		"Bombhot",
+		"Brand",
+		"Brand automatlarm",
+		"Bråk",
+		"Detonation",
+		"Djur skadat/omhändertaget",
+		"Ekobrott",
+		"Farligt föremål, misstänkt",
+		"Fjällräddning",
+		"Fylleri/LOB",
+		"Förfalskningsbrott",
+		"Försvunnen person",
+		"Gränskontroll",
+		"Häleri",
+		"Inbrott",
+		"Inbrott, försök",
+		"Knivlagen",
+		"Kontroll person/fordon",
+		"Lagen om hundar och katter",
+		"Larm inbrott",
+		"Larm överfall",
+		"Miljöbrott",
+		"Missbruk av urkund",
+		"Misshandel",
+		"Misshandel, grov",
+		"Mord/dråp",
+		"Mord/dråp, försök",
+		"Motorfordon, anträffat stulet",
+		"Motorfordon, stöld",
+		"Narkotikabrott",
+		"Naturkatastrof",
+		"Ofog barn/ungdom",
+		"Ofredande/förargelse",
+		"Olaga frihetsberövande",
+		"Olaga hot",
+		"Olaga intrång/hemfridsbrott",
+		"Olovlig körning",
+		"Ordningslagen",
+		"Polisinsats/kommendering",
+		"Rattfylleri",
+		"Rån",
+		"Rån väpnat",
+		"Rån övrigt",
+		"Rån, försök",
+		"Räddningsinsats",
+		"Sammanfattning dag",
+		"Sammanfattning dygn",
+		"Sammanfattning eftermiddag",
+		"Sammanfattning förmiddag",
+		"Sammanfattning helg",
+		"Sammanfattning kväll",
+		"Sammanfattning kväll och natt",
+		"Sammanfattning natt",
+		"Sammanfattning vecka",
+		"Sedlighetsbrott",
+		"Sjukdom/olycksfall",
+		"Sjölagen",
+		"Skadegörelse",
+		"Skottlossning",
+		"Skottlossning, misstänkt",
+		"Spridning smittsamma kemikalier",
+		"Stöld",
+		"Stöld, försök",
+		"Stöld, ringa",
+		"Stöld/inbrott",
+		"Tillfälligt obemannat",
+		"Trafikbrott",
+		"Trafikhinder",
+		"Trafikkontroll",
+		"Trafikolycka",
+		"Trafikolycka, personskada",
+		"Trafikolycka, singel",
+		"Trafikolycka, smitning från",
+		"Trafikolycka, vilt",
+		"Uppdatering",
+		"Utlänningslagen",
+		"Vapenlagen",
+		"Varningslarm/haveri",
+		"Våld/hot mot tjänsteman",
+		"Våldtäkt",
+		"Våldtäkt, försök",
+		"Vållande till kroppsskada",
+	}
+)
+
 type Event struct {
 	Id       int    `json:"id"`
 	Datetime string `json:"datetime"`
@@ -128,28 +220,28 @@ func AllEventsSlice() []Event {
 	return mergedEvents
 }
 
-func subCatType(events []Event) {
+func SubCatType(events []Event, key string) []Event {
 	var subCategory []Event
 
-	var key string
-
-	for i, event := range events {
+	for _, event := range events {
 		if event.Type == key {
-			subCategory[i] = event
+			subCategory = append(subCategory, event)
 		}
 	}
+
+	return subCategory
 }
 
-func subCatLocation(events []Event) {
+func SubCatLocation(events []Event, key string) []Event {
 	var subCategory []Event
 
-	var key string
-
-	for i, event := range events {
+	for _, event := range events {
 		if event.Location.Name == key {
-			subCategory[i] = event
+			subCategory = append(subCategory, event)
 		}
 	}
+
+	return subCategory
 }
 
 // Merges new and old events into a single slice

@@ -4,7 +4,6 @@
 package gui
 
 import (
-	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -12,18 +11,17 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	. "project/main/event"
-	"sort"
 	"strconv"
 )
 
 // Initialize and runs the application
 func RunGUI() {
 
-	app := app.New()
+	SwePe := app.New()
 
-	openWindow(app)
+	openWindow(SwePe)
 
-	app.Run()
+	SwePe.Run()
 }
 
 // Creates and displays the start window
@@ -52,130 +50,125 @@ func contentsOfStartWindow(app fyne.App, start fyne.Window) {
 	start.SetContent(startContent)
 }
 
-// creates and displays the main window
 func mainWindow(app fyne.App) {
 
-	// initializing events
+	mainWindow := app.NewWindow("Swedish Police Events")
+	mainWindow.Resize(fyne.NewSize(1200, 700))
+	mainWindow.CenterOnScreen()
+
 	events := AllEventsSlice()
+	eventsList := eventListView(events)
 
-	sort.Sort(ByDatetime(events))
+	eventInfo := widget.NewLabel("Please select an event")
+	eventInfo.Wrapping = fyne.TextWrapWord
+	extensiveSummary := widget.NewLabel("")
+	extensiveSummary.Wrapping = fyne.TextWrapWord
+	openInBrowserButton := widget.NewButton("Open in browser", func() {})
+	openInBrowserButton.Hide()
+	scrapeBrowserButton := widget.NewButton("Scrape webpage for summary", func() {})
+	scrapeBrowserButton.Hide()
 
-	// creates and displays the main window
-	// main window
-	windowMain := app.NewWindow("Swedish Police Cases")
-	windowMain.Resize(fyne.NewSize(500, 600))
-	windowMain.CenterOnScreen()
+	displayEventInfo := container.NewVBox(eventInfo, extensiveSummary, openInBrowserButton, scrapeBrowserButton)
+	eventsList.OnSelected = consequenceOfSelection(events, eventInfo, extensiveSummary, openInBrowserButton, scrapeBrowserButton)
 
-	toolbar := widget.NewToolbar(
-		widget.NewToolbarAction(theme.SettingsIcon(), func() {
-			fmt.Println("Display settings")
-		}),
-		widget.NewToolbarAction(theme.SearchIcon(), func() {
-			typeButton := fyne.NewMenuItem("Type", func() {
-				typeSortedEvents := events
-				sort.Sort(ByType(typeSortedEvents))
-				typeWindow := app.NewWindow("Type")
-				typeWindow.Resize(fyne.NewSize(500, 700))
-				eventTypeWidget := widget.NewList(
-					func() int {
-						return len(events)
-					},
-					func() fyne.CanvasObject {
-						return widget.NewButton("label", nil)
-					},
-					func(i widget.ListItemID, eventButton fyne.CanvasObject) {
-						button := eventButton.(*widget.Button)
-						button.SetText(typeSortedEvents[i].Type + "\n" + typeSortedEvents[i].Name)
+	typeMenuOptions := keysListview(TypeKeys)
 
-					},
-				)
+	// THIS METHOD CAN BE REUSED FOR LOCATIONMENU OPTIOS FOR INSTANCE.
+	// BY PROVIDING SEARCHKEYS
+	typeMenuOptions.OnSelected = func(id widget.ListItemID) {
+		typeKey := TypeKeys[id]
+		// Creating and editing the window that pops up when a type has been chosen
+		subCatWindow := app.NewWindow(typeKey)
+		subCatWindow.Resize(fyne.NewSize(400, 400))
+		subCatWindow.CenterOnScreen()
+		subCatEvents := SubCatType(AllEventsSlice(), typeKey)
+		subCatEventsListView := eventListView(subCatEvents)
+		subCatEventsListView.OnSelected = consequenceOfSelection(subCatEvents, eventInfo, extensiveSummary, openInBrowserButton, scrapeBrowserButton)
+		subCatWindow.SetContent(subCatEventsListView)
+		subCatWindow.Show()
+	}
 
-				typeWindow.SetContent(eventTypeWidget)
-				typeWindow.Show()
-			})
+	typeMenuOptionsPopUp := widget.NewPopUp(typeMenuOptions, mainWindow.Canvas())
 
-			locationButton := fyne.NewMenuItem("Location", func() {
-				locationSortedEvents := events
-				sort.Sort(ByLocation(locationSortedEvents))
-				locationWindow := app.NewWindow("Location")
-				locationWindow.Resize(fyne.NewSize(500, 700))
-				eventLocationWidget := widget.NewList(
-					func() int {
-						return len(events)
-					},
-					func() fyne.CanvasObject {
-						return widget.NewButton("label", nil)
-					},
-					func(i widget.ListItemID, eventButton fyne.CanvasObject) {
-						button := eventButton.(*widget.Button)
-						button.SetText(locationSortedEvents[i].Type + "\n" + locationSortedEvents[i].Name)
+	typeMenuOptionsPopUp.Resize(fyne.NewSize(300, 200))
 
-					},
-				)
+	typeSearch := fyne.NewMenuItem("Type Search", func() {
+		typeMenuOptionsPopUp.Show()
+	})
 
-				locationWindow.SetContent(eventLocationWidget)
-				locationWindow.Show()
-			})
+	searchMenu := fyne.NewMenu("Search", typeSearch)
 
-			popupMenu := fyne.NewMenu("Search popupMenu", typeButton, locationButton)
+	searchMenuPopUp := widget.NewPopUpMenu(searchMenu, mainWindow.Canvas())
 
-			menu := widget.NewPopUpMenu(popupMenu, windowMain.Canvas())
-			menu.Show()
-		}),
-		widget.NewToolbarAction(theme.DocumentSaveIcon(), func() {
-			fmt.Println("Saved events in the archive")
-		}),
-		widget.NewToolbarAction(theme.HelpIcon(), func() {
-			fmt.Println("Display help")
-		}),
+	verticalToolbar := widget.NewToolbar(widget.NewToolbarAction(theme.SearchIcon(), func() {
+		searchMenuPopUp.Show()
+	}))
+
+	eventsListAndInfoDisplay := container.NewHSplit(eventsList, container.NewMax(displayEventInfo))
+	mainWindowContainer := container.NewVSplit(verticalToolbar, eventsListAndInfoDisplay)
+	mainWindowContainer.SetOffset(0.05)
+
+	mainWindow.SetContent(mainWindowContainer)
+	mainWindow.Show()
+}
+
+/*
+	By providing a slice of valid searchKeys the method provides a listview of the keys
+
+where all alternatives are visible.
+*/
+func keysListview(keys []string) *widget.List {
+	return widget.NewList(
+		func() int {
+			return len(keys)
+		},
+		func() fyne.CanvasObject {
+			return widget.NewLabel("Type options")
+		},
+		func(id widget.ListItemID, object fyne.CanvasObject) {
+			event := object.(*widget.Label)
+			event.SetText(keys[id])
+		},
 	)
+}
 
-	toolContainer := container.NewVBox(toolbar)
+/*
+	The consequences of an event being selected, the parameter events []event is all events
 
-	eventWidget := widget.NewList(
+or also a subcategory of events, this method helps to bring a standard layout
+to the program
+*/
+func consequenceOfSelection(events []Event, eventInfo *widget.Label, extensiveSummary *widget.Label, openInBrowserButton *widget.Button, scrapeBrowserButton *widget.Button) func(id widget.ListItemID) {
+	return func(id widget.ListItemID) {
+		info := "ID: " + strconv.Itoa(events[id].Id) +
+			"\nLocation: " + events[id].Location.Name +
+			"\nType: " + events[id].Type +
+			"\nSummary: " + events[id].Summary
+		eventInfo.SetText(info)
+		extensiveSummary.SetText("")
+		openInBrowserButton.Show()
+		openInBrowserButton.OnTapped = func() {
+			OpenInBrowser(events[id].Url)
+		}
+		scrapeBrowserButton.Show()
+		scrapeBrowserButton.OnTapped = func() {
+			extensiveSummary.SetText(GetExtendedSummary(events[id].Url))
+		}
+	}
+}
+
+func eventListView(events []Event) *widget.List {
+	eventsList := widget.NewList(
 		func() int {
 			return len(events)
 		},
 		func() fyne.CanvasObject {
-			return widget.NewButton("label", nil)
+			return widget.NewLabel("Event")
 		},
-		func(i widget.ListItemID, eventButton fyne.CanvasObject) {
-			button := eventButton.(*widget.Button)
-			button.SetText(events[i].Name)
-			button.OnTapped = func() {
-
-				eventInfo := "ID: " + strconv.Itoa(events[i].Id) +
-					"\nLocation: " + events[i].Location.Name +
-					"\nType: " + events[i].Type +
-					"\nSummary: " + events[i].Summary
-
-				eventWindowContainer := container.NewVBox(widget.NewLabel(eventInfo))
-
-				getDescriptionButton := widget.NewButton("Get description (Beware!\nscraping action)", func() {
-					eventWindowContainer.Add(widget.NewLabel(GetExtendedSummary(events[i].Url)))
-				})
-
-				openInBrowserButton := widget.NewButton("Open in browser", func() {
-					OpenInBrowser(events[i].Url)
-				})
-
-				closeEventInfoButton := widget.NewButton("Close", func() {
-					eventWindowContainer.Hide()
-				})
-
-				eventWindowContainer.Add(getDescriptionButton)
-				eventWindowContainer.Add(closeEventInfoButton)
-				eventWindowContainer.Add(openInBrowserButton)
-
-				toolContainer.Add(eventWindowContainer)
-			}
+		func(id widget.ListItemID, object fyne.CanvasObject) {
+			event := object.(*widget.Label)
+			event.SetText(events[id].Name)
 		},
 	)
-
-	contentsOfMainWindow := container.NewHSplit(toolContainer, eventWidget)
-
-	windowMain.SetContent(contentsOfMainWindow)
-
-	windowMain.Show()
-
+	return eventsList
 }
