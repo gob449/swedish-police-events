@@ -107,6 +107,8 @@ var (
 		"Våldtäkt, försök",
 		"Vållande till kroppsskada",
 	}
+
+	LocationKeys = GetLocationKeys(AllEventsSlice())
 )
 
 type Event struct {
@@ -206,7 +208,10 @@ func (e ByLocation) Swap(i, j int) {
 	e[i], e[j] = e[j], e[i]
 }
 
-// AllEventsSlice Merges archive- and new data and returns the merged slice
+/*
+AllEventsSlice Merges archive- and new data and returns the merged slice also
+datetime sorted
+*/
 func AllEventsSlice() []Event {
 	// Archive data
 	eventsInArchive := GetArchive()
@@ -218,6 +223,28 @@ func AllEventsSlice() []Event {
 	sort.Sort(ByDatetime(mergedEvents))
 
 	return mergedEvents
+}
+
+func GetLocationKeys(events []Event) []string {
+
+	sort.Sort(ByLocation(events))
+
+	availableLocations := make(map[string]int)
+
+	var uniqueLocations []string
+
+	for _, event := range events {
+		_, ok := availableLocations[event.Location.Name]
+
+		if !ok {
+			availableLocations[event.Location.Name] += 1
+		}
+	}
+
+	for location, _ := range availableLocations {
+		uniqueLocations = append(uniqueLocations, location)
+	}
+	return uniqueLocations
 }
 
 func SubCatType(events []Event, key string) []Event {
@@ -236,10 +263,12 @@ func SubCatLocation(events []Event, key string) []Event {
 	var subCategory []Event
 
 	for _, event := range events {
-		if event.Location.Name == key {
+		if strings.EqualFold(event.Location.Name, key) {
 			subCategory = append(subCategory, event)
 		}
 	}
+
+	sort.Sort(ByLocation(subCategory))
 
 	return subCategory
 }

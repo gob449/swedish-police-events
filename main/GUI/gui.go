@@ -12,6 +12,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 	. "project/main/event"
 	"strconv"
+	"time"
 )
 
 // Initialize and runs the application
@@ -56,8 +57,8 @@ func mainWindow(app fyne.App) {
 	mainWindow.Resize(fyne.NewSize(1200, 700))
 	mainWindow.CenterOnScreen()
 
-	events := AllEventsSlice()
-	eventsList := eventListView(events)
+	allEvents := AllEventsSlice()
+	allEventsList := eventListView(allEvents)
 
 	eventInfo := widget.NewLabel("Please select an event")
 	eventInfo.Wrapping = fyne.TextWrapWord
@@ -69,7 +70,7 @@ func mainWindow(app fyne.App) {
 	scrapeBrowserButton.Hide()
 
 	displayEventInfo := container.NewVBox(eventInfo, extensiveSummary, openInBrowserButton, scrapeBrowserButton)
-	eventsList.OnSelected = consequenceOfSelection(events, eventInfo, extensiveSummary, openInBrowserButton, scrapeBrowserButton)
+	allEventsList.OnSelected = eventOnSelection(allEvents, eventInfo, extensiveSummary, openInBrowserButton, scrapeBrowserButton)
 
 	typeMenuOptions := keysListview(TypeKeys)
 
@@ -83,28 +84,70 @@ func mainWindow(app fyne.App) {
 		subCatWindow.CenterOnScreen()
 		subCatEvents := SubCatType(AllEventsSlice(), typeKey)
 		subCatEventsListView := eventListView(subCatEvents)
-		subCatEventsListView.OnSelected = consequenceOfSelection(subCatEvents, eventInfo, extensiveSummary, openInBrowserButton, scrapeBrowserButton)
+		subCatEventsListView.OnSelected = eventOnSelection(subCatEvents, eventInfo, extensiveSummary, openInBrowserButton, scrapeBrowserButton)
 		subCatWindow.SetContent(subCatEventsListView)
 		subCatWindow.Show()
 	}
 
 	typeMenuOptionsPopUp := widget.NewPopUp(typeMenuOptions, mainWindow.Canvas())
-
 	typeMenuOptionsPopUp.Resize(fyne.NewSize(300, 200))
-
-	typeSearch := fyne.NewMenuItem("Type Search", func() {
+	typeSearch := fyne.NewMenuItem("Type", func() {
 		typeMenuOptionsPopUp.Show()
 	})
 
-	searchMenu := fyne.NewMenu("Search", typeSearch)
+	locationMenuOptions := keysListview(LocationKeys)
+	locationMenuOptions.OnSelected = func(id widget.ListItemID) {
+		locationKey := LocationKeys[id]
+		// Creating and editing the window that pops up when a type has been chosen
+		subCatWindow := app.NewWindow(locationKey)
+		subCatWindow.Resize(fyne.NewSize(400, 400))
+		subCatWindow.CenterOnScreen()
+		subCatEvents := SubCatLocation(AllEventsSlice(), locationKey)
+		subCatEventsListView := eventListView(subCatEvents)
+		subCatEventsListView.OnSelected = eventOnSelection(subCatEvents, eventInfo, extensiveSummary, openInBrowserButton, scrapeBrowserButton)
+		subCatWindow.SetContent(subCatEventsListView)
+		subCatWindow.Show()
+	}
+	locationMenuOptionsPopUp := widget.NewPopUp(locationMenuOptions, mainWindow.Canvas())
+	locationMenuOptionsPopUp.Resize(fyne.NewSize(300, 200))
+	locationSearch := fyne.NewMenuItem("Location", func() {
+		locationMenuOptionsPopUp.Show()
+	})
 
+	searchMenu := fyne.NewMenu("Search", typeSearch, locationSearch)
 	searchMenuPopUp := widget.NewPopUpMenu(searchMenu, mainWindow.Canvas())
 
-	verticalToolbar := widget.NewToolbar(widget.NewToolbarAction(theme.SearchIcon(), func() {
-		searchMenuPopUp.Show()
-	}))
+	saveButton := widget.NewButton("Save", func() {
+		SaveInArchive(AllEventsSlice())
 
-	eventsListAndInfoDisplay := container.NewHSplit(eventsList, container.NewMax(displayEventInfo))
+		notificationMessage := widget.NewLabel("Updating archive...")
+		saveNotification := widget.NewPopUp(notificationMessage, mainWindow.Canvas())
+		saveNotification.Show()
+		select {
+		case <-time.After(2 * time.Second):
+		}
+		notificationMessage.SetText("Archive has been updated")
+		select {
+		case <-time.After(2 * time.Second):
+		}
+		saveNotification.Hide()
+	})
+
+	saveMessage := widget.NewLabel("Click 'Save' to update current archive")
+	savePopUpContainer := container.NewVBox(saveMessage, saveButton)
+	savePopUp := widget.NewPopUp(savePopUpContainer, mainWindow.Canvas())
+
+	verticalToolbar := widget.NewToolbar(
+		widget.NewToolbarAction(theme.SearchIcon(), func() {
+			searchMenuPopUp.Show()
+		}),
+		widget.NewToolbarAction(theme.DocumentSaveIcon(), func() {
+			savePopUp.Resize(fyne.NewSize(200, 100))
+			savePopUp.Show()
+		}),
+	)
+
+	eventsListAndInfoDisplay := container.NewHSplit(allEventsList, container.NewMax(displayEventInfo))
 	mainWindowContainer := container.NewVSplit(verticalToolbar, eventsListAndInfoDisplay)
 	mainWindowContainer.SetOffset(0.05)
 
@@ -138,7 +181,7 @@ func keysListview(keys []string) *widget.List {
 or also a subcategory of events, this method helps to bring a standard layout
 to the program
 */
-func consequenceOfSelection(events []Event, eventInfo *widget.Label, extensiveSummary *widget.Label, openInBrowserButton *widget.Button, scrapeBrowserButton *widget.Button) func(id widget.ListItemID) {
+func eventOnSelection(events []Event, eventInfo *widget.Label, extensiveSummary *widget.Label, openInBrowserButton *widget.Button, scrapeBrowserButton *widget.Button) func(id widget.ListItemID) {
 	return func(id widget.ListItemID) {
 		info := "ID: " + strconv.Itoa(events[id].Id) +
 			"\nLocation: " + events[id].Location.Name +
