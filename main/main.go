@@ -27,6 +27,7 @@ func main() {
 	// Run terminal program
 	//terminalTemplate()
 
+	// Run gui program
 	RunGUI()
 
 }

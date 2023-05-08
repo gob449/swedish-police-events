@@ -17,6 +17,100 @@ import (
 	"time"
 )
 
+var (
+	TypeKeys = []string{
+		"Alkohollagen",
+		"Anträffad död",
+		"Anträffat gods",
+		"Arbetsplatsolycka",
+		"Bedrägeri",
+		"Bombhot",
+		"Brand",
+		"Brand automatlarm",
+		"Bråk",
+		"Detonation",
+		"Djur skadat/omhändertaget",
+		"Ekobrott",
+		"Farligt föremål, misstänkt",
+		"Fjällräddning",
+		"Fylleri/LOB",
+		"Förfalskningsbrott",
+		"Försvunnen person",
+		"Gränskontroll",
+		"Häleri",
+		"Inbrott",
+		"Inbrott, försök",
+		"Knivlagen",
+		"Kontroll person/fordon",
+		"Lagen om hundar och katter",
+		"Larm inbrott",
+		"Larm överfall",
+		"Miljöbrott",
+		"Missbruk av urkund",
+		"Misshandel",
+		"Misshandel, grov",
+		"Mord/dråp",
+		"Mord/dråp, försök",
+		"Motorfordon, anträffat stulet",
+		"Motorfordon, stöld",
+		"Narkotikabrott",
+		"Naturkatastrof",
+		"Ofog barn/ungdom",
+		"Ofredande/förargelse",
+		"Olaga frihetsberövande",
+		"Olaga hot",
+		"Olaga intrång/hemfridsbrott",
+		"Olovlig körning",
+		"Ordningslagen",
+		"Polisinsats/kommendering",
+		"Rattfylleri",
+		"Rån",
+		"Rån väpnat",
+		"Rån övrigt",
+		"Rån, försök",
+		"Räddningsinsats",
+		"Sammanfattning dag",
+		"Sammanfattning dygn",
+		"Sammanfattning eftermiddag",
+		"Sammanfattning förmiddag",
+		"Sammanfattning helg",
+		"Sammanfattning kväll",
+		"Sammanfattning kväll och natt",
+		"Sammanfattning natt",
+		"Sammanfattning vecka",
+		"Sedlighetsbrott",
+		"Sjukdom/olycksfall",
+		"Sjölagen",
+		"Skadegörelse",
+		"Skottlossning",
+		"Skottlossning, misstänkt",
+		"Spridning smittsamma kemikalier",
+		"Stöld",
+		"Stöld, försök",
+		"Stöld, ringa",
+		"Stöld/inbrott",
+		"Tillfälligt obemannat",
+		"Trafikbrott",
+		"Trafikhinder",
+		"Trafikkontroll",
+		"Trafikolycka",
+		"Trafikolycka, personskada",
+		"Trafikolycka, singel",
+		"Trafikolycka, smitning från",
+		"Trafikolycka, vilt",
+		"Uppdatering",
+		"Utlänningslagen",
+		"Vapenlagen",
+		"Varningslarm/haveri",
+		"Våld/hot mot tjänsteman",
+		"Våldtäkt",
+		"Våldtäkt, försök",
+		"Vållande till kroppsskada",
+	}
+
+	LocationKeys = GetLocationKeys(AllEventsSlice())
+)
+
 type Event struct {
 	Id       int    `json:"id"`
 	Datetime string `json:"datetime"`
@@ -114,7 +208,10 @@ func (e ByLocation) Swap(i, j int) {
 	e[i], e[j] = e[j], e[i]
 }
 
-// AllEventsSlice Merges archive- and new data and returns the merged slice
+/*
+AllEventsSlice Merges archive- and new data and returns the merged slice also
+datetime sorted
+*/
 func AllEventsSlice() []Event {
 	// Archive data
 	eventsInArchive := GetArchive()
@@ -128,28 +225,53 @@ func AllEventsSlice() []Event {
 	return mergedEvents
 }
 
-func subCatType(events []Event) {
-	var subCategory []Event
+func GetLocationKeys(events []Event) []string {
 
-	var key string
+	sort.Sort(ByLocation(events))
 
-	for i, event := range events {
-		if event.Type == key {
-			subCategory[i] = event
+	availableLocations := make(map[string]int)
+
+	var uniqueLocations []string
+
+	for _, event := range events {
+		_, ok := availableLocations[event.Location.Name]
+
+		if !ok {
+			availableLocations[event.Location.Name] += 1
 		}
 	}
+
+	for location, _ := range availableLocations {
+		uniqueLocations = append(uniqueLocations, location)
+	}
+	sort.Strings(uniqueLocations)
+	return uniqueLocations
 }
 
-func subCatLocation(events []Event) {
+func SubCatType(events []Event, key string) []Event {
 	var subCategory []Event
 
-	var key string
-
-	for i, event := range events {
-		if event.Location.Name == key {
-			subCategory[i] = event
+	for _, event := range events {
+		if event.Type == key {
+			subCategory = append(subCategory, event)
 		}
 	}
+
+	return subCategory
+}
+
+func SubCatLocation(events []Event, key string) []Event {
+	var subCategory []Event
+
+	for _, event := range events {
+		if strings.EqualFold(event.Location.Name, key) {
+			subCategory = append(subCategory, event)
+		}
+	}
+
+	sort.Sort(ByLocation(subCategory))
+
+	return subCategory
 }
 
 // Merges new and old events into a single slice
