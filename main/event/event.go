@@ -244,6 +244,7 @@ func GetLocationKeys(events []Event) []string {
 	for location, _ := range availableLocations {
 		uniqueLocations = append(uniqueLocations, location)
 	}
+	sort.Strings(uniqueLocations)
 	return uniqueLocations
 }
 

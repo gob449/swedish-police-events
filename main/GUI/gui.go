@@ -137,6 +137,51 @@ func mainWindow(app fyne.App) {
 	savePopUpContainer := container.NewVBox(saveMessage, saveButton)
 	savePopUp := widget.NewPopUp(savePopUpContainer, mainWindow.Canvas())
 
+
+	darkThemeOption := fyne.NewMenuItem("Dark theme", func() {
+		darkTheme := theme.DarkTheme()
+		app.Settings().SetTheme(darkTheme)
+	})
+
+	lightThemeOption := fyne.NewMenuItem("Light theme", func() {
+		lightTheme := theme.LightTheme()
+		app.Settings().SetTheme(lightTheme)
+	})
+
+	themeOptionsMenu := fyne.NewMenu("Themes", darkThemeOption, lightThemeOption)
+	themeOptionsMenuPopUp := widget.NewPopUpMenu(themeOptionsMenu, mainWindow.Canvas())
+
+	themeOption := fyne.NewMenuItem("Theme Option", func() {
+		themeOptionsMenuPopUp.Show()
+	})
+
+	plusButton := widget.NewButton("+", func() {
+		currentSize := mainWindow.Canvas().Size()
+		newWidth := (float32(currentSize.Width) * 1.2)
+		newHeight := (float32(currentSize.Height) * 1.2)
+		mainWindow.Resize(fyne.NewSize(newWidth, newHeight))
+	})
+	minusButton := widget.NewButton("-", func() {
+		currentSize := mainWindow.Canvas().Size()
+		newWidth := (float32(currentSize.Width) * 0.8)
+		newHeight := (float32(currentSize.Height) * 0.8)
+		mainWindow.Resize(fyne.NewSize(newWidth, newHeight))
+	})
+
+	sizeMessage := widget.NewLabel("Change size")
+	spacer := widget.NewLabel("")
+	plusMinusContainer := container.NewHBox(spacer, minusButton, plusButton)
+	sizePopUpContainer := container.NewVBox(sizeMessage, plusMinusContainer)
+	
+	sizePopUp := widget.NewPopUp(sizePopUpContainer, mainWindow.Canvas())
+
+	sizeOption := fyne.NewMenuItem("Size", func() {
+		sizePopUp.Show()
+	})
+
+	settingsMenu := fyne.NewMenu("Setting", themeOption, sizeOption)
+	settingsMenuPopUp := widget.NewPopUpMenu(settingsMenu, mainWindow.Canvas())
+
 	verticalToolbar := widget.NewToolbar(
 		widget.NewToolbarAction(theme.SearchIcon(), func() {
 			searchMenuPopUp.Show()
@@ -144,6 +189,9 @@ func mainWindow(app fyne.App) {
 		widget.NewToolbarAction(theme.DocumentSaveIcon(), func() {
 			savePopUp.Resize(fyne.NewSize(200, 100))
 			savePopUp.Show()
+		}),
+		widget.NewToolbarAction(theme.SettingsIcon(), func() {
+			settingsMenuPopUp.Show()
 		}),
 	)
 
@@ -166,7 +214,7 @@ func keysListview(keys []string) *widget.List {
 			return len(keys)
 		},
 		func() fyne.CanvasObject {
-			return widget.NewLabel("Type options")
+			return widget.NewLabel("Key options")
 		},
 		func(id widget.ListItemID, object fyne.CanvasObject) {
 			event := object.(*widget.Label)
