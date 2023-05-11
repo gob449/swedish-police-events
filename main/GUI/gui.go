@@ -51,6 +51,7 @@ func contentsOfStartWindow(app fyne.App, start fyne.Window) {
 	start.SetContent(startContent)
 }
 
+// mainWindow creates and defines a Fyne 'fyne.Window' object
 func mainWindow(app fyne.App) {
 
 	mainWindow := app.NewWindow("Swedish Police Events")
@@ -248,6 +249,7 @@ func eventOnSelection(events []Event, eventInfo *widget.Label, extensiveSummary 
 	}
 }
 
+// EventListView creates and returns a Fyne List widget that displays the names of the given events.
 func eventListView(events []Event) *widget.List {
 	eventsList := widget.NewList(
 		func() int {

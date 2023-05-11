@@ -225,6 +225,7 @@ func AllEventsSlice() []Event {
 	return mergedEvents
 }
 
+// GetLocationKeys takes a slice of Event structs, sorts them by location and returns a slice of unique location keys.
 func GetLocationKeys(events []Event) []string {
 
 	sort.Sort(ByLocation(events))
@@ -248,6 +249,7 @@ func GetLocationKeys(events []Event) []string {
 	return uniqueLocations
 }
 
+// SubCatType takes a slice of Event structs and a string key, and returns a slice of events with matching type.
 func SubCatType(events []Event, key string) []Event {
 	var subCategory []Event
 
@@ -260,6 +262,7 @@ func SubCatType(events []Event, key string) []Event {
 	return subCategory
 }
 
+// SubCatLocation takes a slice of Event structs and a string key, and returns a slice of events with matching location.
 func SubCatLocation(events []Event, key string) []Event {
 	var subCategory []Event
 
@@ -369,6 +372,9 @@ func OpenInBrowser(URL string) {
 	}
 }
 
+// Extracts the extended summary of a news article from the Swedish Police website
+// Takes a string representing the URL of the news article as input.
+// Gives a string representing the extended summary of the news article as output.
 func GetExtendedSummary(URL string) string {
 	url := "https://polisen.se/" + URL
 
